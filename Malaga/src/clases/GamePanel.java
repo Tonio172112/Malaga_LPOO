@@ -1,6 +1,8 @@
 package clases;
 
 import java.awt.Color;
+import javax.swing.ImageIcon;
+import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -36,8 +38,11 @@ class GamePanel extends JPanel {
     private List<Rectangle> projectiles;
     private List<Enemy> enemies;
     private int enemyDirection = ENEMY_SPEED;
+    private Image backgroundImage;
 
     public GamePanel() {
+        ImageIcon icon = new ImageIcon(getClass().getResource("/resources/bg.gif"));
+        backgroundImage = icon.getImage();
         squareX = (GAME_WIDTH - SQUARE_SIZE) / 2;
         moveDirection = 0;
         canShoot = true;
@@ -184,6 +189,7 @@ class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        g.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT, this);
         g.setColor(Color.WHITE);
         g.fillRect(squareX, SQUARE_Y_POSITION, SQUARE_SIZE, SQUARE_SIZE);
 
