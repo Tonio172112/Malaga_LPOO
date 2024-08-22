@@ -1,8 +1,6 @@
 package clases;
 
 import java.awt.Color;
-import javax.swing.ImageIcon;
-import java.awt.Image;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -11,6 +9,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -26,7 +26,10 @@ class GamePanel extends JPanel {
     private static final int ENEMY_SPEED = 2;
     private static final int ENEMY_DROP_DISTANCE = 10;
     private static final int ENEMY_DROP_THRESHOLD = 10;
+    
 
+    private ImageIcon backgroundGif;
+    
     private int squareX;
     private Timer gameTimer;
     private Timer shootTimer;
@@ -38,11 +41,13 @@ class GamePanel extends JPanel {
     private List<Rectangle> projectiles;
     private List<Enemy> enemies;
     private int enemyDirection = ENEMY_SPEED;
-    private Image backgroundImage;
 
     public GamePanel() {
-        ImageIcon icon = new ImageIcon(getClass().getResource("/resources/bg.gif"));
-        backgroundImage = icon.getImage();
+    	
+    	backgroundGif = new ImageIcon(getClass().getClassLoader().getResource("resources/bg.gif"));
+
+        
+        
         squareX = (GAME_WIDTH - SQUARE_SIZE) / 2;
         moveDirection = 0;
         canShoot = true;
@@ -189,7 +194,12 @@ class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT, this);
+        
+        if (backgroundGif != null) {
+            g.drawImage(backgroundGif.getImage(), 0, 0, getWidth(), getHeight(), this);
+        }
+        
+        
         g.setColor(Color.WHITE);
         g.fillRect(squareX, SQUARE_Y_POSITION, SQUARE_SIZE, SQUARE_SIZE);
 
@@ -211,4 +221,3 @@ class GamePanel extends JPanel {
         }
     }
 }
-

@@ -38,7 +38,7 @@ public class GameWindow {
             if (inputStream != null) {
             	logoName = new ImageIcon(ImageIO.read(inputStream));
             } else {
-                System.out.println("Error: El GIF no se pudo cargar. Verifica la ruta.");
+                System.out.println("Error: La imagen no se pudo cargar correctamente.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,7 +51,12 @@ public class GameWindow {
         frmMalaga.getContentPane().setBackground(new Color(35, 31, 30));
 
         frmMalaga.getContentPane().add(gamePanel);
+        gamePanel.setLayout(null);
+        
+        
         frmMalaga.getContentPane().add(logoPanel);
+        
+        
 
         frmMalaga.setVisible(true);
     }
