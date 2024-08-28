@@ -23,9 +23,9 @@ class GamePanel extends JPanel {
     private static final int PROJECTILE_SIZE = 16;
     private static final int PROJECTILE_SPEED = 10;
     private static final int ENEMY_SIZE = 32;
-    private static final int ENEMY_SPEED = 2;
-    private static final int ENEMY_DROP_DISTANCE = 10;
-    private static final int ENEMY_DROP_THRESHOLD = 10;
+    private static final int ENEMY_SPEED = 3;
+    private static final int ENEMY_DROP_DISTANCE = 30;
+    private static final int ENEMY_DROP_THRESHOLD = 2;
     
 
     private ImageIcon backgroundGif;
@@ -112,7 +112,7 @@ class GamePanel extends JPanel {
 
     private void initializeEnemies() {
         int rows = 3; 
-        int cols = 8; 
+        int cols = 6; 
         int xOffset = 10;
         int yOffset = 10;
 
