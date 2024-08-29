@@ -14,4 +14,21 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>Malaga/src/resources/068c90060daaef80f6d6dd033ca1c3b1 (1).png</name>
+			<type>1</type>
+			<location>C:/Users/Alumno/Desktop/068c90060daaef80f6d6dd033ca1c3b1 (1).png</location>
+		</link>
+		<link>
+			<name>Malaga/src/resources/bullet.png</name>
+			<type>1</type>
+			<location>C:/Users/Alumno/Desktop/bullet.png</location>
+		</link>
+		<link>
+			<name>Malaga/src/resources/enemigoVioleta.png</name>
+			<type>1</type>
+			<location>C:/Users/Alumno/Desktop/enemigoVioleta.png</location>
+		</link>
+	</linkedResources>
 </projectDescription>

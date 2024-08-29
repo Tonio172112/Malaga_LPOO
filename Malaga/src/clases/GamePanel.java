@@ -4,7 +4,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -25,14 +24,17 @@ public class GamePanel extends JPanel {
     private static final int GAME_WIDTH = 500;
     private static final int GAME_HEIGHT = 700;
     private static final int SQUARE_Y_POSITION = GAME_HEIGHT - SQUARE_SIZE - 20;
-    private static final int ENEMY_SHOOT_INTERVAL = 700; // Tiempo entre disparos de los enemigos en milisegundos
-    private static final int ENEMY_SHOOT_PROBABILITY = 3; // Probabilidad de disparo del enemigo en porcentajes
+    private static final int ENEMY_SHOOT_INTERVAL = 500;
+    private static final int ENEMY_SHOOT_PROBABILITY = 5;
+    private static final int CAMICASE_SPEED = 8;
+    private static final int CAMICASE_SPAWN_INTERVAL = 2000; // 2 segundos
 
     private BufferedImage backgroundImage;
     private int squareX;
     private Timer gameTimer;
     private Timer shootTimer;
     private Timer enemyShootTimer;
+    private Timer camicaseSpawnTimer;
     private int moveDirection;
     private boolean canShoot;
     private boolean isShooting;
@@ -40,6 +42,7 @@ public class GamePanel extends JPanel {
     private List<Rectangle> projectiles;
     private List<Enemy> enemies;
     private List<Rectangle> enemyProjectiles;
+    private List<Camicase> camicases;
     private int enemyDirection = ENEMY_SPEED;
     private int level = 1;
     private Random random = new Random();
@@ -54,6 +57,7 @@ public class GamePanel extends JPanel {
         projectiles = new ArrayList<>();
         enemies = new ArrayList<>();
         enemyProjectiles = new ArrayList<>();
+        camicases = new ArrayList<>();
 
         setFocusable(true);
         requestFocusInWindow();
@@ -65,13 +69,19 @@ public class GamePanel extends JPanel {
 
         shootTimer = new Timer(500, e -> canShoot = true);
 
-        // Ajusta el intervalo de tiempo entre disparos de los enemigos
         enemyShootTimer = new Timer(ENEMY_SHOOT_INTERVAL, e -> {
-            if (level > 1) { // Solo disparar si el nivel es mayor a 1
+            if (level > 1) {
                 shootEnemyProjectiles();
             }
         });
         enemyShootTimer.start();
+
+        camicaseSpawnTimer = new Timer(CAMICASE_SPAWN_INTERVAL, e -> {
+            if (level == 3) {
+                spawnCamicase();
+            }
+        });
+        camicaseSpawnTimer.start();
 
         addKeyListener(new KeyAdapter() {
             @Override
@@ -102,8 +112,9 @@ public class GamePanel extends JPanel {
 
     private void initializeEnemies() {
         enemies.clear();
-        int rows = level == 1 ? 3 : 3;
-        int cols = level == 1 ? 6 : 6;
+        camicases.clear();
+        int rows = level == 1 ? 3 : (level == 2 ? 4 : 4);
+        int cols = level == 1 ? 6 : (level == 2 ? 5 : 6);
         int xOffset = 10;
         int yOffset = 10;
 
@@ -116,10 +127,17 @@ public class GamePanel extends JPanel {
         }
     }
 
+    private void spawnCamicase() {
+        if (camicases.size() < 5) { // Limitar el número máximo de camicases en pantalla
+            int camicaseX = random.nextInt(GAME_WIDTH - ENEMY_SIZE);
+            int camicaseY = -ENEMY_SIZE; // Iniciar fuera de la pantalla
+            camicases.add(new Camicase(camicaseX, camicaseY, ENEMY_SIZE, ENEMY_SIZE));
+        }
+    }
+
     private void moveSquare(int dx) {
         squareX += dx;
         squareX = Math.max(0, Math.min(squareX, GAME_WIDTH - SQUARE_SIZE));
-        repaint();
     }
 
     private void shootProjectile() {
@@ -134,7 +152,7 @@ public class GamePanel extends JPanel {
 
     private void shootEnemyProjectiles() {
         for (Enemy enemy : enemies) {
-            if (random.nextInt(100) < ENEMY_SHOOT_PROBABILITY) { // Ajusta la probabilidad de que un enemigo dispare
+            if (random.nextInt(100) < ENEMY_SHOOT_PROBABILITY) {
                 int projectileX = enemy.x + (ENEMY_SIZE - PROJECTILE_SIZE) / 2;
                 int projectileY = enemy.y + ENEMY_SIZE;
                 enemyProjectiles.add(new Rectangle(projectileX, projectileY, PROJECTILE_SIZE, PROJECTILE_SIZE));
@@ -175,42 +193,86 @@ public class GamePanel extends JPanel {
                 enemyDropCounter = 0;
             }
         }
-        repaint();
     }
+
+    private void updateCamicases() {
+        List<Camicase> camicasesToRemove = new ArrayList<>();
+        for (Camicase camicase : camicases) {
+            // Mueve el camicase hacia abajo
+            camicase.y += CAMICASE_SPEED;
+
+            // Verificar colisión con el jugador
+            if (camicase.intersects(new Rectangle(squareX, SQUARE_Y_POSITION, SQUARE_SIZE, SQUARE_SIZE))) {
+                JOptionPane.showMessageDialog(this, "¡Un camicase ha alcanzado al jugador!");
+                System.exit(0);
+            }
+
+            // Remover camicases que salen de la pantalla
+            if (camicase.y > GAME_HEIGHT) {
+                camicasesToRemove.add(camicase);
+            }
+        }
+        camicases.removeAll(camicasesToRemove);
+    }
+
 
     private void checkCollisions() {
         projectiles.removeIf(projectile -> {
-            boolean hit = enemies.removeIf(enemy -> projectile.intersects(enemy));
+            boolean hit = false;
+            for (Enemy enemy : new ArrayList<>(enemies)) {
+                if (projectile.intersects(enemy)) {
+                    enemies.remove(enemy);
+                    hit = true;
+                    break;
+                }
+            }
+            for (Camicase camicase : new ArrayList<>(camicases)) {
+                if (projectile.intersects(camicase)) {
+                    camicases.remove(camicase);
+                    hit = true;
+                    break;
+                }
+            }
             return hit;
         });
 
         enemyProjectiles.removeIf(projectile -> {
-            boolean hit = projectile.intersects(new Rectangle(squareX, SQUARE_Y_POSITION, SQUARE_SIZE, SQUARE_SIZE));
+            boolean hit = false;
+            if (projectile.intersects(new Rectangle(squareX, SQUARE_Y_POSITION, SQUARE_SIZE, SQUARE_SIZE))) {
+                JOptionPane.showMessageDialog(this, "¡Un proyectil enemigo ha alcanzado al jugador!");
+                System.exit(0);
+                hit = true;
+            }
             return hit;
         });
     }
 
     private void gameLoop(ActionEvent e) {
-        if (moveDirection != 0) moveSquare(moveDirection);
-        if (isShooting) shootProjectile();
+        if (isShooting) {
+            shootProjectile();
+        }
+
+        moveSquare(moveDirection);
         updateProjectiles();
         updateEnemyProjectiles();
         updateEnemies();
+        updateCamicases();
         checkCollisions();
 
-        if (enemies.isEmpty()) {
+        if (enemies.isEmpty() && camicases.isEmpty()) {
             advanceToNextLevel();
         }
+
+        repaint();
     }
 
     private void advanceToNextLevel() {
         level++;
-        if (level <= 5) {
+        if (level <= 3) {
             initializeEnemies();
-            // Otras configuraciones espec�ficas para el siguiente nivel, si las hay
             System.out.println("Nivel " + level);
         } else {
-            JOptionPane.showMessageDialog(this, "�Has ganado el juego!");
+            JOptionPane.showMessageDialog(this, "¡Has ganado el juego!");
             System.exit(0);
         }
     }
@@ -239,6 +301,11 @@ public class GamePanel extends JPanel {
         for (Enemy enemy : enemies) {
             g.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
         }
+
+        g.setColor(Color.MAGENTA);
+        for (Camicase camicase : camicases) {
+            g.fillRect(camicase.x, camicase.y, camicase.width, camicase.height);
+        }
     }
 
     class Enemy extends Rectangle {
@@ -248,4 +315,12 @@ public class GamePanel extends JPanel {
             super(x, y, width, height);
         }
     }
-}
+
+    class Camicase extends Rectangle {
+        private static final long serialVersionUID = 1L;
+
+        public Camicase(int x, int y, int width, int height) {
+            super(x, y, width, height);
+        }
+    }
+}  
